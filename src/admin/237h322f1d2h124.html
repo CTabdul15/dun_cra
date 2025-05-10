@@ -40,6 +40,36 @@
             to { transform: translateY(0); opacity: 1; }
         }
     </style>
+    <script type="module">
+        import supabase from '../js/supabase-client.js';
+
+        // Initialisiere Statistiken
+        (async () => {
+            // Lade Stats
+            const { data } = await supabase
+                .from('stats')
+                .select('*')
+                .single();
+
+            if (data) {
+                document.getElementById('totalVisitors').textContent = data.total_visitors;
+                document.getElementById('activeUsers').textContent = data.active_users;
+            }
+
+            // Realtime-Updates für Stats
+            supabase
+                .channel('stats')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'stats'
+                }, (payload) => {
+                    document.getElementById('totalVisitors').textContent = payload.new.total_visitors;
+                    document.getElementById('activeUsers').textContent = payload.new.active_users;
+                })
+                .subscribe();
+        })();
+    </script>
 </head>
 <body>
     <div class="stats-container">
@@ -52,70 +82,5 @@
             <span class="stat-value" id="activeUsers">0</span>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const SUPABASE_URL = 'https://ejrvyvyxyvysccpbrisq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqcnZ5dnl4eXZ5c2NjcGJyaXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MDkzNzYsImV4cCI6MjA2MjM4NTM3Nn0.q8cHoC6tOPDZPzNRYd09YhKcAxKPiq2gS3FID2rP-ic';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // Unique Visitor Tracking
-        const trackVisitor = async () => {
-            const isNewVisitor = !localStorage.getItem('hasVisited');
-            
-            if (isNewVisitor) {
-                localStorage.setItem('hasVisited', 'true');
-                
-                // Update total visitors
-                const { data, error } = await supabase
-                    .from('stats')
-                    .select('total_visitors')
-                    .single();
-
-                if (!error) {
-                    const newCount = (data.total_visitors || 0) + 1;
-                    await supabase
-                        .from('stats')
-                        .update({ total_visitors: newCount })
-                        .eq('id', 1);
-                }
-            }
-        };
-
-        // Real-time Updates
-        const setupRealtime = () => {
-            const channel = supabase
-                .channel('stats')
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'stats'
-                }, (payload) => {
-                    document.getElementById('totalVisitors').textContent = payload.new.total_visitors;
-                    document.getElementById('activeUsers').textContent = payload.new.active_users;
-                })
-                .subscribe();
-        };
-
-        // Initial Load
-        const loadStats = async () => {
-            const { data } = await supabase
-                .from('stats')
-                .select('*')
-                .single();
-
-            if (data) {
-                document.getElementById('totalVisitors').textContent = data.total_visitors;
-                document.getElementById('activeUsers').textContent = data.active_users;
-            }
-        };
-
-        // Initialize
-        (async () => {
-            await trackVisitor();
-            await loadStats();
-            setupRealtime();
-        })();
-    </script>
 </body>
 </html>

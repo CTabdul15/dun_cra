@@ -1172,6 +1172,66 @@ class Game {
     }
 }
 
+// Unique Visitor Tracking
+const trackVisitor = async () => {
+    const isNewVisitor = !localStorage.getItem('hasVisited');
+
+    if (isNewVisitor) {
+        localStorage.setItem('hasVisited', 'true');
+
+        // Update total visitors
+        const { data, error } = await supabase
+            .from('stats')
+            .select('total_visitors')
+            .single();
+
+        if (!error) {
+            const newCount = (data.total_visitors || 0) + 1;
+            await supabase
+                .from('stats')
+                .update({ total_visitors: newCount })
+                .eq('id', 1);
+        }
+    }
+};
+
+// Real-time Updates
+const setupRealtime = () => {
+    const channel = supabase
+        .channel('stats')
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'stats'
+        }, (payload) => {
+            document.getElementById('totalVisitors').textContent = payload.new.total_visitors;
+            document.getElementById('activeUsers').textContent = payload.new.active_users;
+        })
+        .subscribe();
+};
+
+// Initial Load
+const loadStats = async () => {
+  // Nur auf der Statistik-Seite ausführen
+  if(document.getElementById('totalVisitors')) {
+    const { data } = await supabase
+      .from('stats')
+      .select('*')
+      .single();
+
+    if (data) {
+      document.getElementById('totalVisitors').textContent = data.total_visitors;
+      document.getElementById('activeUsers').textContent = data.active_users;
+    }
+  }
+};
+
+// Initialize
+(async () => {
+    await trackVisitor();
+    await loadStats();
+    setupRealtime();
+})();
 
 document.addEventListener('DOMContentLoaded', () => {
     const game = new Game();
