@@ -581,15 +581,21 @@ class Game {
     exitCombatMode() {
         this.combatMode = false;
         this.updateButtonStates();
+        const combatControls = document.getElementById('combatControls');
+        if (combatControls) {
+            combatControls.remove(); // Statt nur den Button zu entfernen
+        }
         document.getElementById('monsterContainer').innerHTML = '';
     }
     displayMonsters() {
         const monsterContainer = document.getElementById('monsterContainer');
+        const actionButtons = document.getElementById('actionButtons');
         monsterContainer.innerHTML = '';
 
         // Display combat controls if not already there
-        if (!document.getElementById('combatControls')) {
-            const combatControls = document.createElement('div');
+        let combatControls = document.getElementById('combatControls');
+        if (!combatControls) {
+            combatControls = document.createElement('div');
             combatControls.id = 'combatControls';
             combatControls.className = 'combat-controls';
 
@@ -600,7 +606,7 @@ class Game {
             attackBtn.addEventListener('click', () => this.attackRandomMonster());
 
             combatControls.appendChild(attackBtn);
-            document.getElementById('actionButtons').appendChild(combatControls);
+            actionButtons.appendChild(combatControls);
         }
         this.currentRoom.monsters.forEach((monster, index) => {
             const monsterDiv = document.createElement('div');
@@ -700,6 +706,10 @@ class Game {
             // Check if all monsters are defeated
             if (this.currentRoom.monsters.length === 0) {
                 this.logMessage("You've cleared the room of all monsters!");
+                const attackBtn = document.getElementById('combatControls');
+                if (attackBtn) {
+                    attackBtn.remove();
+                }
                 this.exitCombatMode();
             }
 

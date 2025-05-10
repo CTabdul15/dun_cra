@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Stats</title>
+    <style>
+        .stats-container {
+            font-family: 'Arial', sans-serif;
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: #2d2d2d;
+            border-radius: 8px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .stat-label {
+            color: #a0a0a0;
+            font-weight: 300;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stats-container">
+        <div class="stat-item">
+            <span class="stat-label">Gesamtbesucher</span>
+            <span class="stat-value" id="totalVisitors">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Aktive Benutzer</span>
+            <span class="stat-value" id="activeUsers">0</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ejrvyvyxyvysccpbrisq.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqcnZ5dnl4eXZ5c2NjcGJyaXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MDkzNzYsImV4cCI6MjA2MjM4NTM3Nn0.q8cHoC6tOPDZPzNRYd09YhKcAxKPiq2gS3FID2rP-ic';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Unique Visitor Tracking
+        const trackVisitor = async () => {
+            const isNewVisitor = !localStorage.getItem('hasVisited');
+            
+            if (isNewVisitor) {
+                localStorage.setItem('hasVisited', 'true');
+                
+                // Update total visitors
+                const { data, error } = await supabase
+                    .from('stats')
+                    .select('total_visitors')
+                    .single();
+
+                if (!error) {
+                    const newCount = (data.total_visitors || 0) + 1;
+                    await supabase
+                        .from('stats')
+                        .update({ total_visitors: newCount })
+                        .eq('id', 1);
+                }
+            }
+        };
+
+        // Real-time Updates
+        const setupRealtime = () => {
+            const channel = supabase
+                .channel('stats')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'stats'
+                }, (payload) => {
+                    document.getElementById('totalVisitors').textContent = payload.new.total_visitors;
+                    document.getElementById('activeUsers').textContent = payload.new.active_users;
+                })
+                .subscribe();
+        };
+
+        // Initial Load
+        const loadStats = async () => {
+            const { data } = await supabase
+                .from('stats')
+                .select('*')
+                .single();
+
+            if (data) {
+                document.getElementById('totalVisitors').textContent = data.total_visitors;
+                document.getElementById('activeUsers').textContent = data.active_users;
+            }
+        };
+
+        // Initialize
+        (async () => {
+            await trackVisitor();
+            await loadStats();
+            setupRealtime();
+        })();
+    </script>
+</body>
+</html>
