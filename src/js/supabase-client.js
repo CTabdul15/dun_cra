@@ -2,8 +2,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 // Get environment variables with fallbacks
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ejrvyvyxyvysccpbrisq.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqcnZ5dnl4eXZ5c2NjcGJyaXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MDkzNzYsImV4cCI6MjA2MjM4NTM3Nn0.q8cHoC6tOPDZPzNRYd09YhKcAxKPiq2gS3FID2rP-ic';
+const supabaseUrl = 'https://ejrvyvyxyvysccpbrisq.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqcnZ5dnl4eXZ5c2NjcGJyaXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4MDkzNzYsImV4cCI6MjA2MjM4NTM3Nn0.q8cHoC6tOPDZPzNRYd09YhKcAxKPiq2gS3FID2rP-ic';
 
 // Validate required config
 if (!supabaseUrl) {
