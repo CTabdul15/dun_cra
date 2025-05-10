@@ -27,12 +27,12 @@ class Room {
 
 class Game {
     constructor() {
-        if (!window.supabase) {
-            console.error('Supabase nicht geladen!');
-            return;
-        }
+        // if (!window.supabase) {
+        //     console.error('Supabase nicht geladen!');
+        //     return;
+        // }
 
-        this.supabase = window.supabase;
+        // this.supabase = window.supabase;
         this.setupRealtime();
         this.loadLeaderboard();
         this.level = 1;
