@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Website Stats</title>
@@ -36,16 +37,42 @@
         }
 
         @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
     <script type="module">
         import supabase from '../js/supabase-client.js';
 
-        // Initialisiere Statistiken
+        const trackVisitor = async () => {
+            const isNewVisitor = !localStorage.getItem('hasVisited');
+            if (isNewVisitor) {
+                localStorage.setItem('hasVisited', 'true');
+                // Atomically increment total_visitors
+                await supabase.rpc('increment_total_visitors');
+            }
+        };
+
+        // Initialize stats
         (async () => {
-            // Lade Stats
+            await trackVisitor();
+
+            // Increment active user
+            await supabase.rpc('increment_active_users');
+
+            window.addEventListener('beforeunload', async () => {
+                // Decrement on unload
+                await supabase.rpc('decrement_active_users');
+            });
+
+            // Load initial stats
             const { data } = await supabase
                 .from('stats')
                 .select('*')
@@ -56,7 +83,7 @@
                 document.getElementById('activeUsers').textContent = data.active_users;
             }
 
-            // Realtime-Updates für Stats
+            // Realtime updates
             supabase
                 .channel('stats')
                 .on('postgres_changes', {
@@ -71,6 +98,7 @@
         })();
     </script>
 </head>
+
 <body>
     <div class="stats-container">
         <div class="stat-item">
@@ -83,4 +111,5 @@
         </div>
     </div>
 </body>
+
 </html>

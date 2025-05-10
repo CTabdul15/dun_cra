@@ -1235,7 +1235,10 @@ const loadStats = async () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const game = new Game();
-
+    supabase.rpc('increment_active_users');
+    window.addEventListener('beforeunload', () => {
+        supabase.rpc('decrement_active_users');
+    });
     document.getElementById('btnNorth').addEventListener('click', () => game.move('north'));
     document.getElementById('btnSouth').addEventListener('click', () => game.move('south'));
     document.getElementById('btnEast').addEventListener('click', () => game.move('east'));
